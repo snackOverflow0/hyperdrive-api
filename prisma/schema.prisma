@@ -1,0 +1,112 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// App-wide access levels
+enum SystemRole {
+  CLIENT
+  DRIVER
+  ADMIN
+}
+
+// Compliance tracking status for drivers
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Central Identity Table (Shared by Riders and Drivers)
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password      String
+  phone         String      @unique
+  firstName     String
+  lastName      String
+  role          SystemRole  @default(CLIENT)
+  refreshToken  String?
+  avatar        String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  driverProfile DriverProfile?
+  
+  riderTrips    Trip[]      @relation("RiderTrips")
+  driverTrips   Trip[]      @relation("DriverTrips")
+}
+
+// Extended Profile containing sensitive compliance details for drivers
+model DriverProfile {
+  id                 String             @id @default(uuid())
+
+  userId             String             @unique // One driver profile per user account
+
+  licenseNumber      String             @unique // State driving authorization track
+  verificationStatus VerificationStatus @default(PENDING) // Operational compliance flag
+  rating             Float              @default(5.0) // Moving average passenger rating
+
+  // Connections
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle            Vehicle?
+}
+
+// Fleet Tracking Vehicle Table
+model Vehicle {
+  id              String        @id @default(uuid())
+  driverProfileId String        @unique // One active vehicle tracked per driver profile
+  make            String        // e.g., Toyota
+  model           String        // e.g., Prius
+  year            Int
+  color           String
+  plateNumber     String        @unique // Government identifier plate string
+  isActive        Boolean       @default(false) // Is the vehicle currently online and working?
+
+  driverProfile   DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
+}
+
+// Core State Machine for a Logistics Lifecycle
+enum TripStatus {
+  REQUESTED    // Passenger has ordered a ride; searching for driver
+  ACCEPTED     // Driver has accepted the match; en route to pickup
+  IN_TRANSIT   // Driver has picked up passenger; driving to dropoff
+  COMPLETED    // Passenger arrived safely; trip ended successfully
+  CANCELLED    // Trip killed by passenger or driver before pickup
+}
+
+// The Core Transactional Trip Table
+model Trip {
+  id              String     @id @default(uuid())
+  riderId         String     // Points back to the User who requested the ride
+  driverId        String?    // Optional initially: null until a driver accepts it
+  pickupAddress   String
+  dropoffAddress  String
+  pickupLat       Float      // Decimal coordinates for routing calculations
+  pickupLng       Float
+  dropoffLat      Float
+  dropoffLng      Float
+  status          TripStatus @default(REQUESTED) // Starts here automatically
+  fare            Float      // Calculated cost of the ride
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  rider           User       @relation("RiderTrips", fields: [riderId], references: [id], onDelete: Cascade)
+  driver          User?      @relation("DriverTrips", fields: [driverId], references: [id], onDelete: SetNull)
+  locationLogs    LocationLog[]
+}
+
+// Historical GPS Track Log (For audits, route plotting, and dispute handling)
+model LocationLog {
+  id        String   @id @default(uuid())
+  tripId    String   // Connects this coordinate back to a specific active trip
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
