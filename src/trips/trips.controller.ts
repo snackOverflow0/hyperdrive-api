@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards, Query } from '@nestjs/common';
 import { TripsService } from './trips.service';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { GetTripsQueryDto } from './dto/get-trips-query.dto';
 
 @Controller('trips')
 @UseGuards(AuthGuard('jwt'))
 export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
+
+  @Get('available') // GET /api/v1/trips/available?page=1&limit=5
+  async getAvailableTrips(@Query() query: GetTripsQueryDto) {
+    return this.tripsService.findAvailableTrips(query);
+  }
 
   @Post()
   async createTrip(

@@ -3,6 +3,7 @@ import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TripStatus } from '@prisma/client';
+import { GetTripsQueryDto } from './dto/get-trips-query.dto';
 
 @Injectable()
 export class TripsService {
@@ -88,5 +89,50 @@ export class TripsService {
       message: 'Trip has been successfully cancelled',
       trip: cancelledTrip
     }
+  }
+
+async findAvailableTrips(query: GetTripsQueryDto) {
+    const page = query.page ?? 1
+    const limit = query.limit ?? 10
+    const { pickupSearch } = query
+    
+    const skipAmount = (page - 1) * limit;
+
+    const whereCondition: any = {
+      status: TripStatus.REQUESTED, 
+    };
+
+    if (pickupSearch) {
+      whereCondition.pickupAddress = {
+        contains: pickupSearch,
+        mode: 'insensitive',
+      };
+    }
+
+    const [totalItems, trips] = await this.prisma.$transaction([
+      this.prisma.trip.count({ where: whereCondition }),
+      this.prisma.trip.findMany({
+        where: whereCondition,
+        skip: skipAmount,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      message: 'Available open dispatch trips retrieved successfully.',
+      meta: {
+        totalItems,
+        itemCount: trips.length,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
+      data: trips,
+    };
   }
 }
