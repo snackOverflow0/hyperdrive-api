@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { TripsModule } from './trips/trips.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { TripsModule } from './trips/trips.module';
   ConfigModule.forRoot({ isGlobal: true }),
   PrismaModule,
   AuthModule,
-  TripsModule
+  TripsModule,
+  StorageModule
 
   ],
   
