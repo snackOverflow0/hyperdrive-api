@@ -1,98 +1,69 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚀 HyperDrive API — RideShare & Delivery Logistics Engine
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+HyperDrive is a high-performance, production-ready backend logistics engine built with **NestJS**, **TypeScript**, and **Prisma ORM**, backed by a relational **PostgreSQL** database. 
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The architecture is explicitly designed to handle real-time transportation logistics workflows, strict multi-tenant profile isolation (Riders vs. Drivers), data payload sanitization, cryptographic session tracking, and transactional state-machine transitions.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🏗️ Architectural Core Features
 
-## Project setup
+* **Strict Security Gatekeepers:** Global `ValidationPipe` enforcement that strips malicious incoming payloads and automatically transforms network types.
+* **Unified Identity Blueprint:** A decoupled user mapping schema that separates lightweight core credentials from heavy compliance-driven `DriverProfile` and `Vehicle` data structures.
+* **Atomic State Machine:** Robust `PATCH` transition routes handling trip cycles (`REQUESTED` ➔ `ACCEPTED` ➔ `IN_TRANSIT` ➔ `COMPLETED`) configured with strict concurrency protection layers to eliminate race conditions.
+* **Enterprise Pagination & Filtering:** A high-speed driver dispatch query engine optimized with Prisma `$transaction` blocks to calculate data offsets and total item configurations concurrently.
+* **Sanitized File Interceptors:** A secure binary media processing pipeline utilizing `Multer` disk storage bounded by aggressive file-type filters and rigid physical size limits (2MB max).
+* **Static Asset Delivery:** Integrated static directory mapping allowing immediate localized public access rendering of uploaded user assets.
 
-```bash
-$ npm install
-```
+---
 
-## Compile and run the project
+## 🛠️ Tech Stack & Dependecies
 
-```bash
-# development
-$ npm run start
+* **Framework:** NestJS (v10+)
+* **Language:** TypeScript (Strict Null Checks enabled)
+* **Database abstraction:** Prisma ORM
+* **Database Engine:** PostgreSQL
+* **Security & Encryption:** Bcrypt, Passport JWT, JSONWebTokens
+* **File Streaming Engine:** Multer
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
-```
+## 📁 System Folder Directory Structure
 
-## Run tests
+```text
+src/
+├── app.module.ts            # Root orchestrator initializing configs & modules
+├── main.ts                  # Application entry point & global filter configuration
+├── prisma/
+│   ├── prisma.module.ts     # Global wrapper exposing database context
+│   └── prisma.service.ts    # Live connection pool lifecycle manager
+├── auth/
+│   ├── dto/                 # Input sanitization and payload constraint rules
+│   ├── jwt.strategy.ts      # Passport cryptographic verification extraction hook
+│   ├── auth.controller.ts   # Network routers for user login and onboarding
+│   ├── auth.service.ts      # Encryption, verification, and hash compare routines
+│   └── auth.module.ts       # Async JWT token module factory injection
+├── trips/
+│   ├── dto/                 # Geometric constraints & pagination parameters
+│   ├── trips.controller.ts  # State transition routes & dispatcher board endpoints
+│   └── trips.service.ts     # Transactional multi-row update algorithms
+└── storage/
+    ├── utils/               # Multer file size ceilings & format filters
+    ├── storage.controller.ts# Binary multipart upload interceptor pipeline
+    └── storage.module.ts    # File system encapsulation orchestrator
+⚙️ Quick Start Installation & Local Setup1. Clone & Install DependenciesEnsure your local environment has Node.js (v18+) and a running instance of PostgreSQL.Bash# Install core and framework development tools
+npm install
+2. Configure Environment PropertiesCreate a .env file in your project's absolute root and feed your parameters:Code snippetDATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/hyperdrive_db?schema=public"
+JWT_SECRET="hyperdrive_super_secret_signing_key_2026"
+JWT_EXPIRES_IN="15m"
+3. Initialize Database TablesRun your migrations to compile schemas directly onto your local PostgreSQL cluster:Bashnpx prisma migrate dev --name init_logistics_infrastructure
+4. Fire Up the Watch EngineBash# Start local microservices in development watch mode
+npm run start:dev
 
-```bash
-# unit tests
-$ npm run test
+The server will boot and bind to: http://localhost:3000/api/v1📡 
 
-# e2e tests
-$ npm run test:e2e
+Essential Core API EndpointsAll base endpoints are routed through the /api/v1 versioning namespace.
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+🔐 Authentication 
+Context Method Endpoint Payload Constraints Access Level Description
+POST/auth/registerRegisterDto (JSON)PublicOnboards a Client or Driver profilePOST/auth/loginLoginDto (JSON)PublicEvaluates hashes & returns a JWTGET/auth/profile-testNoneBearer TokenValidates session passport credentials🚗 Trip & Dispatch LogisticsMethodEndpointQuery / Body ParametersAccess LevelDescriptionPOST/tripsCreateTripDto (JSON)Bearer TokenRequests an open ride queue entryGET/trips/available?page=1&limit=10&pickupSearch=textBearer TokenFetches paginated unassigned requestsPATCH/trips/:id/acceptURL Param :idBearer: DRIVERClaims ride; shifts state atomicallyPATCH/trips/:id/cancelURL Param :idBearer TokenTerminates ride if state permits📁 Media Asset StorageMethodEndpointPayload ConstraintsAccess LevelDescriptionPOST/storage/upload-avatarmultipart/form-data (avatar file)Bearer TokenEncrypts name, writes file, updates User rowGET/uploads/avatars/:nameURL Param filenamePublic
